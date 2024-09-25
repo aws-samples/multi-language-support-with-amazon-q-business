@@ -1,4 +1,4 @@
-# Custom Web Experience with Amazon Q Business
+# Muli Language Support with Amazon Q Business
 
 | :zap: If you created a new Amazon Q Business application on or after April 30th, 2024, you can now set up a custom UI using the updated instructions provided below.
 |-----------------------------------------|
