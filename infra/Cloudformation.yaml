@@ -37,6 +37,8 @@ Resources:
     Properties:
       BucketName: !Sub "${AWS::StackName}-mybucket"
       AccessControl: Private
+      VersioningConfiguration:
+        Status: Enabled
 
   QApplicationPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -90,104 +92,104 @@ Resources:
       IdentityCenterInstanceArn: !Ref IdentityCenterInstanceArn
       RoleArn: !GetAtt QAppRole.Arn
 
-  QDataSourcePolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Action:
-              - 'qbusiness:BatchPutDocument'
-              - 'qbusiness:BatchDeleteDocument'
-              - 'qbusiness:PutGroup'
-              - 'qbusiness:CreateUser'
-              - 'qbusiness:DeleteGroup'
-              - 'qbusiness:UpdateUser'
-              - 'qbusiness:ListGroups'
-            Resource:
-              - !Sub 'arn:${AWS::Partition}:qbusiness:${AWS::Region}:${AWS::AccountId}:*/*'
-              - !Sub 'arn:${AWS::Partition}:qbusiness:${AWS::Region}:${AWS::AccountId}:*/*/*/*'
-              - !Sub 'arn:${AWS::Partition}:qbusiness:${AWS::Region}:${AWS::AccountId}:*/*/*/*/*/*'
-              - !Sub 'arn:${AWS::Partition}:qbusiness:${AWS::Region}:${AWS::AccountId}:*/*/*'
-              - !Sub 'arn:${AWS::Partition}:qbusiness:${AWS::Region}:${AWS::AccountId}:*'
-          - Sid: AllowsAmazonQToGetObjectfromS3
-            Action:
-            - s3:GetObject
-            Resource:
-              - !Sub "arn:${AWS::Partition}:s3:::${MyS3Bucket}/*"
-            Effect: Allow
-            Condition:
-              StringEquals:
-                aws:ResourceAccount: !Ref AWS::AccountId
-          - Sid: AllowsAmazonQToListS3Buckets
-            Action:
-            - s3:ListBucket
-            Resource:
-            - !Sub "arn:${AWS::Partition}:s3:::${MyS3Bucket}"
-            Effect: Allow
-            Condition:
-              StringEquals:
-                aws:ResourceAccount: !Ref AWS::AccountId
-          - Sid: AllowsAmazonQToCreateAndDeleteENI
-            Effect: Allow
-            Action:
-            - ec2:CreateNetworkInterface
-            - ec2:DeleteNetworkInterface
-            Resource:
-            - !Sub "arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:security-group/${SecurityGroup}"
-          - Sid: AllowsAmazonQToCreateDeleteENI
-            Effect: Allow
-            Action:
-            - ec2:CreateNetworkInterface
-            - ec2:DeleteNetworkInterface
-            - ec2:CreateNetworkInterfacePermission
-            Resource: !Sub "arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:network-interface/*"
-            Condition:
-              ForAllValues:StringEquals:
-                aws:TagKeys:
-                - AMAZON_Q
-          - Sid: AllowsAmazonQToCreateTags
-            Effect: Allow
-            Action:
-            - ec2:CreateTags
-            Resource: !Sub "arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:network-interface/*"
-            Condition:
-              StringEquals:
-                ec2:CreateAction: CreateNetworkInterface
-          - Sid: AllowsAmazonQToConnectToVPC
-            Effect: Allow
-            Action:
-            - ec2:DescribeNetworkInterfaces
-            - ec2:DescribeAvailabilityZones
-            - ec2:DescribeNetworkInterfaceAttribute
-            - ec2:DescribeVpcs
-            - ec2:DescribeRegions
-            - ec2:DescribeNetworkInterfacePermissions
-            - ec2:DescribeSubnets
-            Resource: "*"
-          - Sid: GetSharePointSecret
-            Effect: Allow
-            Action:
-              - "secretsmanager:GetResourcePolicy"
-              - "secretsmanager:GetSecretValue"
-              - "secretsmanager:DescribeSecret"
-              - "secretsmanager:ListSecretVersionIds"
-            Resource:
-              - !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:QBusiness*"
+  # QDataSourcePolicy:
+  #   Type: AWS::IAM::ManagedPolicy
+  #   Properties:
+  #     PolicyDocument:
+  #       Version: '2012-10-17'
+  #       Statement:
+  #         - Effect: Allow
+  #           Action:
+  #             - 'qbusiness:BatchPutDocument'
+  #             - 'qbusiness:BatchDeleteDocument'
+  #             - 'qbusiness:PutGroup'
+  #             - 'qbusiness:CreateUser'
+  #             - 'qbusiness:DeleteGroup'
+  #             - 'qbusiness:UpdateUser'
+  #             - 'qbusiness:ListGroups'
+  #           Resource:
+  #             - !Sub 'arn:${AWS::Partition}:qbusiness:${AWS::Region}:${AWS::AccountId}:*/*'
+  #             - !Sub 'arn:${AWS::Partition}:qbusiness:${AWS::Region}:${AWS::AccountId}:*/*/*/*'
+  #             - !Sub 'arn:${AWS::Partition}:qbusiness:${AWS::Region}:${AWS::AccountId}:*/*/*/*/*/*'
+  #             - !Sub 'arn:${AWS::Partition}:qbusiness:${AWS::Region}:${AWS::AccountId}:*/*/*'
+  #             - !Sub 'arn:${AWS::Partition}:qbusiness:${AWS::Region}:${AWS::AccountId}:*'
+  #         - Sid: AllowsAmazonQToGetObjectfromS3
+  #           Action:
+  #           - s3:GetObject
+  #           Resource:
+  #             - !Sub "arn:${AWS::Partition}:s3:::${MyS3Bucket}/*"
+  #           Effect: Allow
+  #           Condition:
+  #             StringEquals:
+  #               aws:ResourceAccount: !Ref AWS::AccountId
+  #         - Sid: AllowsAmazonQToListS3Buckets
+  #           Action:
+  #           - s3:ListBucket
+  #           Resource:
+  #           - !Sub "arn:${AWS::Partition}:s3:::${MyS3Bucket}"
+  #           Effect: Allow
+  #           Condition:
+  #             StringEquals:
+  #               aws:ResourceAccount: !Ref AWS::AccountId
+  #         - Sid: AllowsAmazonQToCreateAndDeleteENI
+  #           Effect: Allow
+  #           Action:
+  #           - ec2:CreateNetworkInterface
+  #           - ec2:DeleteNetworkInterface
+  #           Resource:
+  #           - !Sub "arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:security-group/${SecurityGroup}"
+  #         - Sid: AllowsAmazonQToCreateDeleteENI
+  #           Effect: Allow
+  #           Action:
+  #           - ec2:CreateNetworkInterface
+  #           - ec2:DeleteNetworkInterface
+  #           - ec2:CreateNetworkInterfacePermission
+  #           Resource: !Sub "arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:network-interface/*"
+  #           Condition:
+  #             ForAllValues:StringEquals:
+  #               aws:TagKeys:
+  #               - AMAZON_Q
+  #         - Sid: AllowsAmazonQToCreateTags
+  #           Effect: Allow
+  #           Action:
+  #           - ec2:CreateTags
+  #           Resource: !Sub "arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:network-interface/*"
+  #           Condition:
+  #             StringEquals:
+  #               ec2:CreateAction: CreateNetworkInterface
+  #         - Sid: AllowsAmazonQToConnectToVPC
+  #           Effect: Allow
+  #           Action:
+  #           - ec2:DescribeNetworkInterfaces
+  #           - ec2:DescribeAvailabilityZones
+  #           - ec2:DescribeNetworkInterfaceAttribute
+  #           - ec2:DescribeVpcs
+  #           - ec2:DescribeRegions
+  #           - ec2:DescribeNetworkInterfacePermissions
+  #           - ec2:DescribeSubnets
+  #           Resource: "*"
+  #         - Sid: GetSharePointSecret
+  #           Effect: Allow
+  #           Action:
+  #             - "secretsmanager:GetResourcePolicy"
+  #             - "secretsmanager:GetSecretValue"
+  #             - "secretsmanager:DescribeSecret"
+  #             - "secretsmanager:ListSecretVersionIds"
+  #           Resource:
+  #             - !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:QBusiness*"
 
-  QDataSourceRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: qbusiness.amazonaws.com
-            Action: 'sts:AssumeRole'
-      ManagedPolicyArns:
-        - !Ref QDataSourcePolicy
+  # QDataSourceRole:
+  #   Type: AWS::IAM::Role
+  #   Properties:
+  #     AssumeRolePolicyDocument:
+  #       Version: '2012-10-17'
+  #       Statement:
+  #         - Effect: Allow
+  #           Principal:
+  #             Service: qbusiness.amazonaws.com
+  #           Action: 'sts:AssumeRole'
+  #     ManagedPolicyArns:
+  #       - !Ref QDataSourcePolicy
 
   QIndex:
     Type: AWS::QBusiness::Index
@@ -203,7 +205,7 @@ Resources:
         NativeIndexConfiguration:
           IndexId: !GetAtt QIndex.IndexId         
       DisplayName: !Sub "${AWS::StackName}-retriever"
-      RoleArn: !GetAtt QDataSourceRole.Arn
+      # RoleArn: !GetAtt QDataSourceRole.Arn
       Type: NATIVE_INDEX
 
   S3QDataSource:
@@ -226,7 +228,7 @@ Resources:
         type: "S3"
       DisplayName: !Sub "${AWS::StackName}-s3-ds"
       IndexId: !GetAtt QIndex.IndexId
-      RoleArn: !GetAtt QDataSourceRole.Arn
+      # RoleArn: !GetAtt QDataSourceRole.Arn
       SyncSchedule: !Ref SyncSchedule
 
   QManagedPolicy:
@@ -458,6 +460,10 @@ Resources:
     Type: AWS::EC2::LaunchTemplate
     Properties:
       LaunchTemplateData:
+        BlockDeviceMappings:
+          - DeviceName: /dev/xvda  # Root EBS Volume
+            Ebs:
+              Encrypted: true   
         NetworkInterfaces:
           - DeviceIndex: 0
             AssociatePublicIpAddress: true 
