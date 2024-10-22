@@ -178,18 +178,59 @@ Resources:
   #           Resource:
   #             - !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:QBusiness*"
 
-  # QDataSourceRole:
-  #   Type: AWS::IAM::Role
-  #   Properties:
-  #     AssumeRolePolicyDocument:
-  #       Version: '2012-10-17'
-  #       Statement:
-  #         - Effect: Allow
-  #           Principal:
-  #             Service: qbusiness.amazonaws.com
-  #           Action: 'sts:AssumeRole'
-  #     ManagedPolicyArns:
-  #       - !Ref QDataSourcePolicy
+  QDataSourceRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: "qbusiness.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Policies:
+        - PolicyName: 
+            Fn::Sub: "${AWS::StackName}-QBusinessPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: "AllowsAmazonQToIngestDocuments"
+                Effect: "Allow"
+                Action:
+                  - "qbusiness:BatchPutDocument"
+                  - "qbusiness:BatchDeleteDocument"
+                Resource: 
+                  - !Sub "arn:aws:qbusiness:${AWS::Region}:${AWS::AccountId}:application/${QApp}/index/${QIndex.IndexId}"
+              - Sid: "AllowsAmazonQToIngestPrincipalMapping"
+                Effect: "Allow"
+                Action:
+                  - "qbusiness:PutGroup"
+                  - "qbusiness:CreateUser"
+                  - "qbusiness:DeleteGroup"
+                  - "qbusiness:UpdateUser"
+                  - "qbusiness:ListGroups"
+                Resource:
+                  - !Sub "arn:aws:qbusiness:${AWS::Region}:${AWS::AccountId}:application/${QApp}"
+                  - !Sub "arn:aws:qbusiness:${AWS::Region}:${AWS::AccountId}:application/${QApp}/index/${QIndex.IndexId}"
+                  - !Sub "arn:aws:qbusiness:${AWS::Region}:${AWS::AccountId}:application/${QApp}/index/${QIndex.IndexId}/data-source/*"
+              - Sid: AllowsAmazonQToGetObjectfromS3Bucket
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:s3:::${MyS3Bucket}/*"
+                Effect: Allow
+                Condition:
+                  StringEquals:
+                    aws:ResourceAccount: !Ref AWS::AccountId
+              - Sid: AllowsAmazonQToListS3Bucket
+                Action:
+                - s3:ListBucket
+                Resource:
+                - !Sub "arn:${AWS::Partition}:s3:::${MyS3Bucket}"
+                Effect: Allow
+                Condition:
+                  StringEquals:
+                    aws:ResourceAccount: !Ref AWS::AccountId
 
   QIndex:
     Type: AWS::QBusiness::Index
@@ -205,7 +246,7 @@ Resources:
         NativeIndexConfiguration:
           IndexId: !GetAtt QIndex.IndexId         
       DisplayName: !Sub "${AWS::StackName}-retriever"
-      # RoleArn: !GetAtt QDataSourceRole.Arn
+      RoleArn: !GetAtt QDataSourceRole.Arn
       Type: NATIVE_INDEX
 
   S3QDataSource:
@@ -228,7 +269,7 @@ Resources:
         type: "S3"
       DisplayName: !Sub "${AWS::StackName}-s3-ds"
       IndexId: !GetAtt QIndex.IndexId
-      # RoleArn: !GetAtt QDataSourceRole.Arn
+      RoleArn: !GetAtt QDataSourceRole.Arn
       SyncSchedule: !Ref SyncSchedule
 
   QManagedPolicy:
