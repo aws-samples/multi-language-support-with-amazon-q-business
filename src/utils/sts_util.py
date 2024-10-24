@@ -1,8 +1,6 @@
 import jwt
 import boto3
 import streamlit as st
-import base64
-import json
 
 def assume_role_with_token(iam_token):
     """
@@ -23,11 +21,4 @@ def assume_role_with_token(iam_token):
     st.session_state.aws_credentials = response["Credentials"]
     
 def decode_token(token):
-    # Split the JWT into parts
-    parts = token.split('.')
-    header = parts[0]
-
-    # Decode the header from base64
-    decoded_header = base64.urlsafe_b64decode(header + '==').decode('utf-8')
-    header_json = json.loads(decoded_header)
-    return jwt.decode(token, algorithms=["RS256"], options={"verify_signature": True})
+    return jwt.decode(token, options={"verify_signature": False})
