@@ -10,7 +10,7 @@ class ChatController:
         self.view = view
         
         # Set headers
-        user_email = jwt.decode(st.session_state["token"]["id_token"], options={"verify_signature": True})["email"]
+        user_email = jwt.decode(st.session_state["token"]["id_token"], algorithms=['HS256'], options={"verify_signature": True})["email"]
         self.view.set_headers(user_email)
         
         # Initialize chat messages
