@@ -30,4 +30,4 @@ def decode_token(token):
     # Decode the header from base64
     decoded_header = base64.urlsafe_b64decode(header + '==').decode('utf-8')
     header_json = json.loads(decoded_header)
-    return jwt.decode(token, options={"verify_signature": True})
+    return jwt.decode(token, algorithms=[header_json['alg']], options={"verify_signature": True})
