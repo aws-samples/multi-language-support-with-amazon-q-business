@@ -4,8 +4,6 @@ from utils.q_util import get_q_chain
 from streamlit_feedback import streamlit_feedback
 from utils.translation_util import translate_text
 from utils.sts_util import decode_token
-import json
-import base64
 
 class ChatController:
 
