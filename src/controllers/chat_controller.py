@@ -3,14 +3,17 @@ import jwt
 from utils.q_util import get_q_chain
 from streamlit_feedback import streamlit_feedback
 from utils.translation_util import translate_text
+from utils.sts_util import decode_token
 
 class ChatController:
 
     def __init__(self, view):
         self.view = view
         
+        iam_token = decode_token(st.session_state["token"]["id_token"])
+        
         # Set headers
-        user_email = jwt.decode(st.session_state["token"]["id_token"], options={"verify_signature": False})["email"]
+        user_email = iam_token["email"]
         self.view.set_headers(user_email)
         
         # Initialize chat messages
