@@ -1,12 +1,23 @@
 import jwt
 import boto3
 import streamlit as st
+import base64
+import json
 
 def assume_role_with_token(iam_token):
     """
     Assume IAM role using the IAM OIDC idToken.
     """
-    decoded_token = jwt.decode(iam_token, algorithms=['RS256'], options={"verify_signature": True})
+    iam_token = jwt.decode(st.session_state["token"]["id_token"])
+    # Split the JWT into parts
+    parts = iam_token.split('.')
+    header = parts[0]
+
+    # Decode the header from base64
+    decoded_header = base64.urlsafe_b64decode(header + '==').decode('utf-8')
+    header_json = json.loads(decoded_header)
+    
+    decoded_token = jwt.decode(iam_token, algorithms=[header_json['alg']], options={"verify_signature": True})
     sts_client = boto3.client("sts", region_name=st.session_state.REGION)
     response = sts_client.assume_role(
         RoleArn=st.session_state.IAM_ROLE,

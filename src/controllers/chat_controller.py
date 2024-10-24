@@ -3,14 +3,25 @@ import jwt
 from utils.q_util import get_q_chain
 from streamlit_feedback import streamlit_feedback
 from utils.translation_util import translate_text
+import json
+import base64
 
 class ChatController:
 
     def __init__(self, view):
         self.view = view
         
+        iam_token = jwt.decode(st.session_state["token"]["id_token"])
+        # Split the JWT into parts
+        parts = iam_token.split('.')
+        header = parts[0]
+
+        # Decode the header from base64
+        decoded_header = base64.urlsafe_b64decode(header + '==').decode('utf-8')
+        header_json = json.loads(decoded_header)
+
         # Set headers
-        user_email = jwt.decode(st.session_state["token"]["id_token"], algorithms=['RS256'], options={"verify_signature": True})["email"]
+        user_email = jwt.decode(iam_token, algorithms=[header_json['alg']], options={"verify_signature": True})["email"]
         self.view.set_headers(user_email)
         
         # Initialize chat messages
