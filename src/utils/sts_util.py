@@ -8,7 +8,7 @@ def assume_role_with_token(iam_token):
     """
     Assume IAM role using the IAM OIDC idToken.
     """
-    decoded_token = decode_token(st.session_state["token"]["id_token"])
+    decoded_token = decode_token(iam_token)
     sts_client = boto3.client("sts", region_name=st.session_state.REGION)
     response = sts_client.assume_role(
         RoleArn=st.session_state.IAM_ROLE,
