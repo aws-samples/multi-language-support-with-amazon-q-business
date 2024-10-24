@@ -1,4 +1,5 @@
 pyjwt
+pyjwt[crypto]
 streamlit==1.34
 streamlit-oauth==0.1.13
 streamlit-feedback
