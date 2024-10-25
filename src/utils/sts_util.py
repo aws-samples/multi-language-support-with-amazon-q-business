@@ -39,6 +39,15 @@ def get_public_key(kid):
             return jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(key))
     raise ValueError("Public key not found")
 
+def get_alg(token):
+    # Split the JWT into parts
+    parts = token.split('.')
+    header = parts[0]
+    # Decode the header from base64
+    decoded_header = base64.urlsafe_b64decode(header + '==').decode('utf-8')
+    header_json = json.loads(decoded_header)
+    return header_json['alg']
+
 def decode_token(token):
     
     # Cognito JWKs URL
@@ -50,7 +59,7 @@ def decode_token(token):
 
     for index, public_key in enumerate(jwks['keys']):
         try:
-            return jwt.decode(token, public_key, algorithms=["RS256"], options={"verify_signature": True})
+            return jwt.decode(token, public_key, algorithms=[get_alg(token)], options={"verify_signature": True})
         except Exception as e:
             if index == len(jwks['keys']) - 1:
                 raise e
