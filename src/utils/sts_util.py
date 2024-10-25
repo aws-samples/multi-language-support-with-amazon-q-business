@@ -1,6 +1,9 @@
 import jwt
 import boto3
 import streamlit as st
+import base64
+import json
+import requests
 
 def assume_role_with_token(iam_token):
     """
@@ -20,5 +23,36 @@ def assume_role_with_token(iam_token):
     )
     st.session_state.aws_credentials = response["Credentials"]
     
+
+
+
+def get_public_key(kid):
+    # Cognito JWKs URL
+    jwks_url = f"https://cognito-idp.us-east-1.amazonaws.com/us-east-1_IQZP3cEKL/.well-known/jwks.json "
+
+    # Fetch the JWKs
+    response = requests.get(jwks_url)
+    jwks = response.json()
+
+    for key in jwks['keys']:
+        if key['kid'] == kid:
+            return jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(key))
+    raise ValueError("Public key not found")
+
 def decode_token(token):
-    return jwt.decode(token, options={"verify_signature": False})
+    # Split the JWT into parts
+    parts = token.split('.')
+    header = parts[0]
+    # Decode the header from base64
+    decoded_header = base64.urlsafe_b64decode(header + '==').decode('utf-8')
+    header_json = json.loads(decoded_header)
+    
+    # Decode header to get `kid`
+    header = jwt.get_unverified_header(token)
+    kid = header["kid"]
+
+    # Retrieve the appropriate public key
+    public_key = get_public_key(kid)
+
+    return jwt.decode(token, public_key, algorithms=[header_json['alg']], options={"verify_signature": True})
+
