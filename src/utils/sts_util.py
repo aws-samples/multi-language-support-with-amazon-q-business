@@ -57,7 +57,8 @@ def decode_token(token):
     response = requests.get(jwks_url)
     jwks = response.json()
     
-    raise Exception(get_alg(token))
+    header = jwt.get_unverified_header(token)
+    raise Exception(header["alg"])
 
     for index, public_key in enumerate(jwks['keys']):
         try:
