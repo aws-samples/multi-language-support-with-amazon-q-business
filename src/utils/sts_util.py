@@ -56,6 +56,8 @@ def decode_token(token):
     # Fetch the JWKs
     response = requests.get(jwks_url)
     jwks = response.json()
+    
+    raise Exception(get_alg(token))
 
     for index, public_key in enumerate(jwks['keys']):
         try:
