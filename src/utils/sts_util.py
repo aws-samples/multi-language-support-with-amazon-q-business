@@ -42,6 +42,7 @@ def get_public_key(kid):
 def decode_token(token):
     # Decode header to get `kid`
     header = jwt.get_unverified_header(token)
+    raise Exception(header.keys())
     kid = header["kid"]
 
     # Retrieve the appropriate public key
