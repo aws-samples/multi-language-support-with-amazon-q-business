@@ -28,7 +28,7 @@ def assume_role_with_token(iam_token):
 
 def get_public_key(kid):
     # Cognito JWKs URL
-    jwks_url = f"https://cognito-idp.us-east-1.amazonaws.com/us-east-1_IQZP3cEKL/.well-known/jwks.json "
+    jwks_url = f"https://cognito-idp.us-east-1.amazonaws.com/us-east-1_IQZP3cEKL/.well-known/jwks.json"
 
     # Fetch the JWKs
     response = requests.get(jwks_url)
