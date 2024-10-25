@@ -40,13 +40,33 @@ def get_public_key(kid):
     raise ValueError("Public key not found")
 
 def decode_token(token):
-    # Decode header to get `kid`
-    header = jwt.get_unverified_header(token)
-    raise Exception(header.keys())
-    kid = header["kid"]
+    
+    # Cognito JWKs URL
+    jwks_url = f"https://cognito-idp.us-east-1.amazonaws.com/us-east-1_IQZP3cEKL/.well-known/jwks.json"
 
-    # Retrieve the appropriate public key
-    public_key = get_public_key(kid)
+    # Fetch the JWKs
+    response = requests.get(jwks_url)
+    jwks = response.json()
 
-    return jwt.decode(token, public_key, algorithms=["RS256"], options={"verify_signature": True})
+    for index, public_key in enumerate(jwks['keys']):
+        try:
+            return jwt.decode(token, public_key, algorithms=["RS256"], options={"verify_signature": True})
+        except Exception as e:
+            if index == len(jwks['keys']) - 1:
+                raise e
+            else:
+                continue
+                
+    # # Decode header to get `kid`
+    # header = jwt.get_unverified_header(token)
+    # kid = header["kid"]
+    # # Load your known public key (in PEM format)
+    # with open("public_key.pem", "r") as key_file:
+    #     public_key = key_file.read()
+        
+
+    # # Retrieve the appropriate public key
+    # public_key = get_public_key(kid)
+
+    # return jwt.decode(token, public_key, algorithms=["RS256"], options={"verify_signature": True})
 
