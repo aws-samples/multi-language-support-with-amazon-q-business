@@ -4,12 +4,22 @@ import streamlit as st
 import base64
 import json
 import requests
+import logging
+
+# Configure logging to log to a file
+logging.basicConfig(filename='log.txt', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 def assume_role_with_token(iam_token):
     """
     Assume IAM role using the IAM OIDC idToken.
     """
     decoded_token = decode_token(iam_token)
+    
+    if not decoded_token:
+        logger.error("Failed to decode JWT token.")
+        raise ValueError("The provided JWT token could not be decoded.")
+    
     sts_client = boto3.client("sts", region_name=st.session_state.REGION)
     response = sts_client.assume_role(
         RoleArn=st.session_state.IAM_ROLE,
@@ -17,36 +27,11 @@ def assume_role_with_token(iam_token):
         ProvidedContexts=[
             {
                 "ProviderArn": "arn:aws:iam::aws:contextProvider/IdentityCenter",
-                "ContextAssertion": decoded_token["sts:identity_context"],
+                "ContextAssertion": decoded_token.get("sts:identity_context"),
             }
         ],
     )
     st.session_state.aws_credentials = response["Credentials"]
-    
-
-
-
-def get_public_key(kid):
-    # Cognito JWKs URL
-    jwks_url = f"https://cognito-idp.us-east-1.amazonaws.com/us-east-1_IQZP3cEKL/.well-known/jwks.json"
-
-    # Fetch the JWKs
-    response = requests.get(jwks_url)
-    jwks = response.json()
-
-    for key in jwks['keys']:
-        if key['kid'] == kid:
-            return jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(key))
-    raise ValueError("Public key not found")
-
-def get_alg(token):
-    # Split the JWT into parts
-    parts = token.split('.')
-    header = parts[0]
-    # Decode the header from base64
-    decoded_header = base64.urlsafe_b64decode(header + '==').decode('utf-8')
-    header_json = json.loads(decoded_header)
-    return header_json['alg']
 
 def decode_token(token):
     # Cognito JWKs URL
@@ -55,6 +40,9 @@ def decode_token(token):
     # Fetch the JWKs
     response = requests.get(jwks_url)
     jwks = response.json()
+    
+    # Log the entire JWKS response
+    logger.debug(f"JWKS fetched: {json.dumps(jwks, indent=2)}")
     
     # Iterate over all keys since there's no kid
     for index, jwk in enumerate(jwks['keys']):
@@ -70,9 +58,18 @@ def decode_token(token):
             # Attempt to decode the token using ES384
             return jwt.decode(token, public_key, algorithms=["ES384"], options={"verify_signature": True})
         except jwt.InvalidTokenError as e:
-            # If this is the last key and still no match, raise the exception
-            if index == len(jwks['keys']) - 1:
-                raise e
-            else:
-                continue
+            logger.debug(f"Failed to decode with key {index}: {e}")
+            continue
 
+    # If no valid key was found
+    logger.error("Unable to decode JWT with any of the provided public keys.")
+    return None
+
+def get_alg(token):
+    # Split the JWT into parts
+    parts = token.split('.')
+    header = parts[0]
+    # Decode the header from base64
+    decoded_header = base64.urlsafe_b64decode(header + '==').decode('utf-8')
+    header_json = json.loads(decoded_header)
+    return header_json['alg']
