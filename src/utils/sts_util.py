@@ -49,7 +49,6 @@ def get_alg(token):
     return header_json['alg']
 
 def decode_token(token):
-    
     # Cognito JWKs URL
     jwks_url = f"https://cognito-idp.us-east-1.amazonaws.com/us-east-1_IQZP3cEKL/.well-known/jwks.json"
 
@@ -57,28 +56,17 @@ def decode_token(token):
     response = requests.get(jwks_url)
     jwks = response.json()
     
-    header = jwt.get_unverified_header(token)
-    # raise Exception(header["alg"])
-
-    for index, public_key in enumerate(jwks['keys']):
+    # Iterate over all keys since there's no kid
+    for index, jwk in enumerate(jwks['keys']):
         try:
+            # Convert the JWK to a PEM-formatted key
+            public_key = jwt.algorithms.RSAAlgorithm.from_jwk(jwk)
+            # Attempt to decode the token
             return jwt.decode(token, public_key, algorithms=[get_alg(token)], options={"verify_signature": True})
-        except Exception as e:
+        except jwt.InvalidTokenError as e:
+            # If this is the last key and still no match, raise the exception
             if index == len(jwks['keys']) - 1:
                 raise e
             else:
                 continue
-                
-    # # Decode header to get `kid`
-    # header = jwt.get_unverified_header(token)
-    # kid = header["kid"]
-    # # Load your known public key (in PEM format)
-    # with open("public_key.pem", "r") as key_file:
-    #     public_key = key_file.read()
-        
-
-    # # Retrieve the appropriate public key
-    # public_key = get_public_key(kid)
-
-    # return jwt.decode(token, public_key, algorithms=["RS256"], options={"verify_signature": True})
 
