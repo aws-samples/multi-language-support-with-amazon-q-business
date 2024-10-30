@@ -58,9 +58,15 @@ def decode_token(token):
     
     # Iterate over all keys since there's no kid
     for index, jwk in enumerate(jwks['keys']):
+        # Check if the key type is EC (Elliptic Curve)
+        if jwk.get("kty") != "EC":
+            continue
+
         try:
             # Convert the JWK to a PEM-formatted key for ECDSA
             public_key = jwt.algorithms.ECAlgorithm.from_jwk(json.dumps(jwk))
+            # Log the public key
+            logger.debug(f"Attempting to decode with public key: {public_key}")
             # Attempt to decode the token using ES384
             return jwt.decode(token, public_key, algorithms=["ES384"], options={"verify_signature": True})
         except jwt.InvalidTokenError as e:
