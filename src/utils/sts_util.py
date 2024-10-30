@@ -30,7 +30,8 @@ def assume_role_with_token(iam_token):
 
 def decode_token(token):
     # Cognito JWKs URL
-    jwks_url = f"https://cognito-idp.us-east-1.amazonaws.com/us-east-1_IQZP3cEKL/.well-known/jwks.json"
+    # jwks_url = f"https://cognito-idp.us-east-1.amazonaws.com/us-east-1_IQZP3cEKL/.well-known/jwks.json"
+    jwks_url = "https://identitycenter.us-east-1.amazonaws.com/ssoins-72232462764d7503/.well-known/jwks.json"
 
     # Fetch the JWKs
     response = requests.get(jwks_url)
