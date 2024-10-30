@@ -43,6 +43,7 @@ def decode_token(token):
     
     # Log the entire JWKS response
     logger.debug(f"JWKS fetched: {json.dumps(jwks, indent=2)}")
+    logger.debug(f"Passed JWT token: {json.dumps(token, indent=2)}")
     
     # Iterate over all keys since there's no kid
     for index, jwk in enumerate(jwks['keys']):
