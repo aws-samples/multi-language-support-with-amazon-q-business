@@ -4,11 +4,6 @@ import streamlit as st
 import base64
 import json
 import requests
-import logging
-
-# Configure logging to log to a file
-logging.basicConfig(filename='log.txt', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 def assume_role_with_token(iam_token):
     """
@@ -17,7 +12,7 @@ def assume_role_with_token(iam_token):
     decoded_token = decode_token(iam_token)
     
     if not decoded_token:
-        logger.error("Failed to decode JWT token.")
+        st.write("Failed to decode JWT token.")
         raise ValueError("The provided JWT token could not be decoded.")
     
     sts_client = boto3.client("sts", region_name=st.session_state.REGION)
@@ -41,9 +36,9 @@ def decode_token(token):
     response = requests.get(jwks_url)
     jwks = response.json()
     
-    # Log the entire JWKS response
-    logger.debug(f"JWKS fetched: {json.dumps(jwks, indent=2)}")
-    logger.debug(f"Passed JWT token: {json.dumps(token, indent=2)}")
+    # Display the entire JWKS response
+    st.write("JWKS fetched:", json.dumps(jwks, indent=2))
+    st.write("JWT fetched:", json.dumps(token, indent=2))
     
     # Iterate over all keys since there's no kid
     for index, jwk in enumerate(jwks['keys']):
@@ -54,16 +49,16 @@ def decode_token(token):
         try:
             # Convert the JWK to a PEM-formatted key for ECDSA
             public_key = jwt.algorithms.ECAlgorithm.from_jwk(json.dumps(jwk))
-            # Log the public key
-            logger.debug(f"Attempting to decode with public key: {public_key}")
+            # Display the public key
+            st.write(f"Attempting to decode with public key: {public_key}")
             # Attempt to decode the token using ES384
             return jwt.decode(token, public_key, algorithms=["ES384"], options={"verify_signature": True})
         except jwt.InvalidTokenError as e:
-            logger.debug(f"Failed to decode with key {index}: {e}")
+            st.write(f"Failed to decode with key {index}: {e}")
             continue
 
     # If no valid key was found
-    logger.error("Unable to decode JWT with any of the provided public keys.")
+    st.write("Unable to decode JWT with any of the provided public keys.")
     return None
 
 def get_alg(token):
