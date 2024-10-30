@@ -59,10 +59,10 @@ def decode_token(token):
     # Iterate over all keys since there's no kid
     for index, jwk in enumerate(jwks['keys']):
         try:
-            # Convert the JWK to a PEM-formatted key
-            public_key = jwt.algorithms.RSAAlgorithm.from_jwk(jwk)
-            # Attempt to decode the token
-            return jwt.decode(token, public_key, algorithms=[get_alg(token)], options={"verify_signature": True})
+            # Convert the JWK to a PEM-formatted key for ECDSA
+            public_key = jwt.algorithms.ECAlgorithm.from_jwk(json.dumps(jwk))
+            # Attempt to decode the token using ES384
+            return jwt.decode(token, public_key, algorithms=["ES384"], options={"verify_signature": True})
         except jwt.InvalidTokenError as e:
             # If this is the last key and still no match, raise the exception
             if index == len(jwks['keys']) - 1:
